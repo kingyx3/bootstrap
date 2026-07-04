@@ -70,4 +70,13 @@ async def block_dangerous_bash(input_data, tool_use_id, context):
             "merges pull requests. Push your branch and report it instead.",
         )
 
+    # Production releases are the owner's decision alone — no AI employee cuts them.
+    if "gh release create" in normalized:
+        return _deny(
+            command,
+            "Blocked by company policy — production releases are the owner's "
+            "decision. Merging to the default branch (staging) is as far as the "
+            "org goes; report readiness and let the owner release.",
+        )
+
     return {}

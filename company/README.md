@@ -49,8 +49,8 @@ company/
 | Role | Git / GitHub capability |
 |---|---|
 | **Engineer** | Commits and pushes **its own branch**. Cannot push to the default branch, force-push, or open/merge PRs (blocked in code by the Bash guard). |
-| **Engineering Manager** | Reviews branches and, once a change is complete, **opens the pull request** into the default branch via the `open_pull_request` tool — the only role that can. Does not merge. |
-| **CEO / Owner** | The CEO escalates; **merging to the default branch is the owner's decision.** |
+| **Engineering Manager** | Reviews branches and, once a change is complete, **opens and merges the pull request** into the default branch (`open_pull_request` + `merge_pull_request`) — the only role that can. Merging the default branch **deploys to staging**. |
+| **Owner (human)** | **Production release is the owner's alone** — no AI employee cuts releases or deploys to prod. The CEO reports what's on staging and ready; the owner approves the release. |
 
 ## Name your GitHub repo at inception
 
@@ -66,9 +66,10 @@ export GITHUB_TOKEN=ghp_...                    # access to that repo
 On first run the repo is cloned into `workspace/<repo>`. Each engineer then gets
 its **own git worktree + branch** of that clone (so parallel engineers never
 collide), builds there, commits, and pushes its branch. The **Engineering
-Manager** reviews the branches and opens the pull request into the default
-branch. Auth uses a git credential helper that reads `$GITHUB_TOKEN` at run time
-— the token is never written into `.git/config`.
+Manager** reviews the branches and opens and merges the pull request into the
+default branch (which deploys to staging); **production release stays with the
+owner**. Auth uses a git credential helper that reads `$GITHUB_TOKEN` at run
+time — the token is never written into `.git/config`.
 
 Leave `PROJECT_REPO` empty to fall back to greenfield builds in `workspace/`.
 

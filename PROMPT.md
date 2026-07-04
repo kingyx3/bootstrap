@@ -117,8 +117,9 @@ engineering hierarchy instead of the generic function list. Add this slot to
      Does not write code.
    - Engineering Manager: breaks a brief into INDEPENDENT tasks, assigns them
      to engineers running in parallel, reviews their work, and is the ONLY role
-     that opens a pull request into the default branch once a change is complete.
-     Does not write code or merge.
+     that opens AND merges pull requests into the default branch (which deploys
+     to staging) once a change is complete. Does not write code, and never cuts
+     production releases — that stays with the owner.
    - Engineer (scalable to N): does the actual building with real coding tools,
      each in its own directory/worktree. Commits and pushes its own branch only
      — it cannot push to the default branch or open PRs. One task per engineer

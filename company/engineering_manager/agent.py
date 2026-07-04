@@ -117,8 +117,48 @@ async def open_pull_request(args):
         }
 
 
+@tool(
+    "merge_pull_request",
+    "Merge a reviewed, complete pull request into the default branch. Merging the "
+    "default branch deploys to STAGING. Only the Engineering Manager may merge. Do "
+    "NOT use this for production releases — those are the owner's decision.",
+    {
+        "type": "object",
+        "properties": {
+            "pull_request": {
+                "type": "string",
+                "description": "PR number, URL, or branch to merge, e.g. 42 or engineer-1.",
+            },
+            "method": {
+                "type": "string",
+                "description": "Merge method: squash (default), merge, or rebase.",
+            },
+        },
+        "required": ["pull_request"],
+    },
+)
+async def merge_pull_request(args):
+    if not repo_mod.repo_configured():
+        return {
+            "content": [{"type": "text", "text": "No project repo configured; nothing to merge."}],
+            "is_error": True,
+        }
+    try:
+        result = await asyncio.to_thread(
+            repo_mod.merge_pull_request, args["pull_request"], args.get("method", "squash")
+        )
+        return {"content": [{"type": "text", "text": result}]}
+    except Exception as e:
+        return {
+            "content": [{"type": "text", "text": f"Failed to merge pull request: {e}"}],
+            "is_error": True,
+        }
+
+
 _eng_server = create_sdk_mcp_server(
-    name="eng", version="1.0.0", tools=[assign_to_engineers, open_pull_request]
+    name="eng",
+    version="1.0.0",
+    tools=[assign_to_engineers, open_pull_request, merge_pull_request],
 )
 
 
@@ -132,6 +172,7 @@ async def run_engineering_manager(brief: str) -> str:
     mcp_servers = {"eng": _eng_server}
     if repo_mod.repo_configured():
         allowed_tools.append("mcp__eng__open_pull_request")
+        allowed_tools.append("mcp__eng__merge_pull_request")
         gh = repo_mod.github_mcp_server()  # optional richer GitHub tools for the EM
         if gh:
             mcp_servers["github"] = gh

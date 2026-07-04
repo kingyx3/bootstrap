@@ -104,6 +104,22 @@ def open_pull_request(head_branch: str, title: str, body: str = "", base: str | 
     return (proc.stdout or "").strip() or "Pull request created."
 
 
+def merge_pull_request(pull_request: str, method: str = "squash") -> str:
+    """Merge a PR into the default branch (which deploys to staging).
+
+    `pull_request` is a PR number, URL, or branch. `method` is squash|merge|rebase.
+    Runs `gh pr merge` in the base clone; raises on failure (not mergeable, checks
+    failing, auth) so the caller can surface it as a tool error. This merges to
+    STAGING only — production releases are the owner's decision and are not wired
+    into the org.
+    """
+    flag = {"squash": "--squash", "merge": "--merge", "rebase": "--rebase"}.get(
+        method, "--squash"
+    )
+    proc = _run(["gh", "pr", "merge", pull_request, flag], cwd=str(base_repo_dir()))
+    return (proc.stdout or "").strip() or f"Merged {pull_request} into the default branch."
+
+
 def github_mcp_server() -> dict | None:
     """Config for the official GitHub MCP server, or None if not enabled/possible."""
     if not (config.ENABLE_GITHUB_MCP and config.GITHUB_TOKEN):

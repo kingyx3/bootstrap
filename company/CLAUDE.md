@@ -29,13 +29,16 @@ request. When unset, engineers build greenfield in `workspace/`.
 - No employee may modify the organisation's own runtime files: `config.py`,
   `guards.py`, `repo.py`, `run.py`, this `CLAUDE.md`, or anything under the
   `ceo/`, `engineering_manager/`, or `engineer/` packages. Those run the company.
-- **PR authority:** engineers commit and push their own branches only. Only the
-  Engineering Manager opens pull requests into the default branch, once a change
-  is complete; merging is the owner's decision. Engineers never push to the
-  default branch, never force-push, and never open/merge PRs — all enforced in
-  code by a PreToolUse guard hook, not just requested here.
-- Nothing irreversible or outward-facing (merge, deploy, publish, spend, contact
-  a customer) happens without the owner's approval — the CEO escalates instead.
+- **PR authority:** engineers commit and push their own branches only. The
+  Engineering Manager is the only role that opens AND merges pull requests into
+  the default branch — merging the default branch deploys to STAGING. Engineers
+  never push to the default branch, never force-push, and never open/merge PRs —
+  all enforced in code by a PreToolUse guard hook, not just requested here.
+- **Production is the owner's alone.** No AI employee cuts production releases,
+  creates release tags/GitHub Releases, or deploys to production. The org's reach
+  ends at staging; the CEO reports readiness and the owner approves the release.
+- Nothing else irreversible or outward-facing (publish, spend, contact a
+  customer) happens without the owner's approval — the CEO escalates instead.
 - Destructive shell commands are blocked in code by the same guard hook.
 
 ## Voice
