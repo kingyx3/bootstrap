@@ -9,7 +9,7 @@ See README.md.
 import asyncio
 import sys
 
-from ceo import run_ceo
+from ceo.agent import run_ceo
 from repo import repo_configured, ensure_base_clone
 
 

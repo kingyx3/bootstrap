@@ -1,8 +1,8 @@
 """The CEO / orchestrator — the human owner's single point of contact.
 
 You talk to the CEO; the CEO delegates engineering work to the Engineering
-Manager (who delegates to engineers). The `delegate_to_engineering` tool is the
-bridge from this level to the one below.
+Manager (who delegates to engineers and opens PRs). The `delegate_to_engineering`
+tool is the bridge from this level to the one below.
 """
 from claude_agent_sdk import (
     query,
@@ -15,15 +15,16 @@ from claude_agent_sdk import (
 )
 
 import config
-from prompts import CEO_PROMPT
-from engineering_manager import run_engineering_manager
+from ceo.prompt import CEO_PROMPT
+from engineering_manager.agent import run_engineering_manager
 
 
 @tool(
     "delegate_to_engineering",
     "Hand a project brief to the Engineering Manager. The EM breaks it into tasks, "
-    "assigns them to engineers, reviews their work, and returns one consolidated "
-    "report. Use this for anything that requires building or changing code.",
+    "assigns them to engineers, reviews their work, opens a pull request when the "
+    "change is complete, and returns one consolidated report. Use this for anything "
+    "that requires building or changing code.",
     {
         "type": "object",
         "properties": {

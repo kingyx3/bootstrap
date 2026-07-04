@@ -116,11 +116,14 @@ engineering hierarchy instead of the generic function list. Add this slot to
      turns them into project briefs, and delegates to the Engineering Manager.
      Does not write code.
    - Engineering Manager: breaks a brief into INDEPENDENT tasks, assigns them
-     to engineers running in parallel, reviews their work, reports back up.
-     Does not write code.
-   - Engineer (scalable to N): does the actual building with real coding tools.
-     One task per engineer per round; the Engineering Manager decides how many
-     to run (up to my team-size cap).
+     to engineers running in parallel, reviews their work, and is the ONLY role
+     that opens a pull request into the default branch once a change is complete.
+     Does not write code or merge.
+   - Engineer (scalable to N): does the actual building with real coding tools,
+     each in its own directory/worktree. Commits and pushes its own branch only
+     — it cannot push to the default branch or open PRs. One task per engineer
+     per round; the Engineering Manager decides how many to run (up to my
+     team-size cap).
    For each role give the system prompt (job description), the tools and
    permissions it gets, and the delegation mechanism connecting it to the level
    below.

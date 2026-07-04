@@ -59,7 +59,15 @@ async def block_dangerous_bash(input_data, tool_use_id, context):
         return _deny(
             command,
             "Blocked by company policy — never push to the default branch. "
-            "Push your own branch and open a pull request instead.",
+            "Push your own branch; the Engineering Manager opens the pull request.",
+        )
+
+    normalized = " ".join(lowered.split())
+    if "gh pr create" in normalized or "gh pr merge" in normalized:
+        return _deny(
+            command,
+            "Blocked by company policy — only the Engineering Manager opens or "
+            "merges pull requests. Push your branch and report it instead.",
         )
 
     return {}

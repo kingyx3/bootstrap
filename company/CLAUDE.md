@@ -27,13 +27,15 @@ request. When unset, engineers build greenfield in `workspace/`.
 ## Hard rules (policies)
 - Product code lives under `./workspace/` (the project repo clone, or greenfield).
 - No employee may modify the organisation's own runtime files: `config.py`,
-  `prompts.py`, `guards.py`, `repo.py`, `ceo.py`, `engineering_manager.py`,
-  `engineer.py`, `run.py`, or this `CLAUDE.md`. Those run the company itself.
-- Engineers reach the codebase only through pull requests — never commit or push
-  to the default branch (main/master), and never force-push. This is enforced in
+  `guards.py`, `repo.py`, `run.py`, this `CLAUDE.md`, or anything under the
+  `ceo/`, `engineering_manager/`, or `engineer/` packages. Those run the company.
+- **PR authority:** engineers commit and push their own branches only. Only the
+  Engineering Manager opens pull requests into the default branch, once a change
+  is complete; merging is the owner's decision. Engineers never push to the
+  default branch, never force-push, and never open/merge PRs — all enforced in
   code by a PreToolUse guard hook, not just requested here.
-- Nothing irreversible or outward-facing (deploy, publish, spend, contact a
-  customer) happens without the owner's approval — the CEO escalates instead.
+- Nothing irreversible or outward-facing (merge, deploy, publish, spend, contact
+  a customer) happens without the owner's approval — the CEO escalates instead.
 - Destructive shell commands are blocked in code by the same guard hook.
 
 ## Voice

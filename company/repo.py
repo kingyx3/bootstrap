@@ -89,6 +89,21 @@ async def make_engineer_worktree(engineer_id: str) -> Path:
     return worktree
 
 
+def open_pull_request(head_branch: str, title: str, body: str = "", base: str | None = None) -> str:
+    """Open a PR from head_branch into base (default: repo default branch).
+
+    Runs `gh pr create` in the base clone; authenticates via GITHUB_TOKEN in the
+    environment. Raises on failure (missing gh, auth, or unknown branch) — the
+    caller turns that into a tool error. Returns the PR URL on success.
+    """
+    args = ["gh", "pr", "create", "--head", head_branch,
+            "--title", title, "--body", body or title]
+    if base:
+        args += ["--base", base]
+    proc = _run(args, cwd=str(base_repo_dir()))
+    return (proc.stdout or "").strip() or "Pull request created."
+
+
 def github_mcp_server() -> dict | None:
     """Config for the official GitHub MCP server, or None if not enabled/possible."""
     if not (config.ENABLE_GITHUB_MCP and config.GITHUB_TOKEN):

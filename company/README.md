@@ -20,20 +20,37 @@ tool whose handler runs the level below as its own `query()` loop. Engineers are
 spawned concurrently with `asyncio.gather`, so "the Engineer" scales to as many
 engineers as the Engineering Manager assigns tasks for (capped by `MAX_ENGINEERS`).
 
-## Files
+## Layout
 
-| File | Role |
+Each employee lives in its own directory (package): its agent and its system
+prompt. Shared infrastructure sits at the root.
+
+```
+company/
+├── run.py                       # entry point — give the CEO a directive
+├── config.py                    # models per role, MAX_ENGINEERS, PROJECT_REPO, paths
+├── guards.py                    # PreToolUse hook (destructive cmds, main pushes, PR creation)
+├── repo.py                      # clone, per-engineer worktrees, open_pull_request, GitHub MCP
+├── CLAUDE.md                    # company memory, auto-loaded for every role
+├── ceo/
+│   ├── agent.py                 #   CEO orchestrator + delegate_to_engineering tool
+│   └── prompt.py
+├── engineering_manager/
+│   ├── agent.py                 #   assign_to_engineers (fan-out) + open_pull_request (EM-only)
+│   └── prompt.py
+├── engineer/
+│   ├── agent.py                 #   run_engineer, scaled to many
+│   └── prompt.py
+└── workspace/                   # cloned project repo + per-engineer worktrees (or greenfield)
+```
+
+## Who can do what with the repo
+
+| Role | Git / GitHub capability |
 |---|---|
-| `run.py` | Entry point — give the CEO a directive |
-| `ceo.py` | CEO orchestrator + `delegate_to_engineering` tool |
-| `engineering_manager.py` | Engineering Manager + `assign_to_engineers` tool (the parallel fan-out) |
-| `engineer.py` | A single engineer agent (`run_engineer`), scaled to many |
-| `prompts.py` | The three system prompts (job descriptions) |
-| `guards.py` | `PreToolUse` hook: blocks destructive commands and pushes to the default branch |
-| `repo.py` | Project-repo integration: clone, per-engineer git worktrees, GitHub MCP |
-| `config.py` | Models per role, `MAX_ENGINEERS`, `PROJECT_REPO`, paths |
-| `CLAUDE.md` | Company memory, auto-loaded for every role |
-| `workspace/` | The cloned project repo + per-engineer worktrees (or greenfield code) |
+| **Engineer** | Commits and pushes **its own branch**. Cannot push to the default branch, force-push, or open/merge PRs (blocked in code by the Bash guard). |
+| **Engineering Manager** | Reviews branches and, once a change is complete, **opens the pull request** into the default branch via the `open_pull_request` tool — the only role that can. Does not merge. |
+| **CEO / Owner** | The CEO escalates; **merging to the default branch is the owner's decision.** |
 
 ## Name your GitHub repo at inception
 
@@ -48,9 +65,10 @@ export GITHUB_TOKEN=ghp_...                    # access to that repo
 
 On first run the repo is cloned into `workspace/<repo>`. Each engineer then gets
 its **own git worktree + branch** of that clone (so parallel engineers never
-collide), builds there, commits, pushes its branch, and opens a pull request via
-`gh` (or the GitHub MCP tools if enabled). Auth uses a git credential helper that
-reads `$GITHUB_TOKEN` at run time — the token is never written into `.git/config`.
+collide), builds there, commits, and pushes its branch. The **Engineering
+Manager** reviews the branches and opens the pull request into the default
+branch. Auth uses a git credential helper that reads `$GITHUB_TOKEN` at run time
+— the token is never written into `.git/config`.
 
 Leave `PROJECT_REPO` empty to fall back to greenfield builds in `workspace/`.
 
