@@ -94,3 +94,46 @@ CONSTRAINTS ON YOUR ANSWER
 3. Re-run it quarterly with updated context; the plan should change as the business does.
 
 The full generic answer to this prompt — the reusable framework and build manual — is in [`PLAYBOOK.md`](./PLAYBOOK.md).
+
+---
+
+## Variant: a software company with a scalable engineering org
+
+If your business *is* building software, instantiate the org as a concrete
+engineering hierarchy instead of the generic function list. Add this slot to
+**MY CONTEXT**:
+
+```text
+- Engineering team size: [how many parallel engineers, e.g. 3]
+```
+
+…and replace deliverables 2 and 3 with this more specific ask:
+
+```text
+2. THE AI ENGINEERING ORG — Design the company as a three-role hierarchy I can
+   run today on the Claude Agent SDK:
+   - CEO / orchestrator: my single point of contact. Takes my directions,
+     turns them into project briefs, and delegates to the Engineering Manager.
+     Does not write code.
+   - Engineering Manager: breaks a brief into INDEPENDENT tasks, assigns them
+     to engineers running in parallel, reviews their work, reports back up.
+     Does not write code.
+   - Engineer (scalable to N): does the actual building with real coding tools.
+     One task per engineer per round; the Engineering Manager decides how many
+     to run (up to my team-size cap).
+   For each role give the system prompt (job description), the tools and
+   permissions it gets, and the delegation mechanism connecting it to the level
+   below.
+
+3. BUILD THE SCAFFOLDING — Give me a runnable Claude Agent SDK project: an entry
+   point I invoke with a directive, the three roles wired as nested agents
+   (each level delegates via a custom in-process tool whose handler runs the
+   level below), parallel fan-out to multiple engineers, a company-memory file,
+   a permission/guard hook that blocks destructive commands in code, and a
+   workspace directory where engineers build. Include how to scale the engineer
+   count and how to smoke-test it cheaply.
+```
+
+A working reference implementation of exactly this — CEO → Engineering Manager →
+scalable Engineers — lives in [`company/`](./company/). Point the model at it
+("adapt the `company/` scaffolding to add a QA employee") to extend the org.
