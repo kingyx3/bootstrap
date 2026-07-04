@@ -47,7 +47,20 @@ def base_repo_dir() -> Path:
 
 
 def _run(args: list[str], cwd: str | None = None) -> subprocess.CompletedProcess:
-    return subprocess.run(args, cwd=cwd, check=True, capture_output=True, text=True)
+    """Run a command, raising a RuntimeError with the real stderr on failure.
+
+    subprocess's CalledProcessError stringifies to just the exit code, which
+    hides the git/gh error text from the agent. We surface stderr instead so the
+    Engineering Manager (and logs) see why something failed.
+    """
+    try:
+        proc = subprocess.run(args, cwd=cwd, capture_output=True, text=True)
+    except FileNotFoundError as e:
+        raise RuntimeError(f"'{args[0]}' is not installed or not on PATH") from e
+    if proc.returncode != 0:
+        detail = (proc.stderr or proc.stdout or "").strip()
+        raise RuntimeError(detail or f"`{' '.join(args)}` failed (exit {proc.returncode})")
+    return proc
 
 
 def ensure_base_clone() -> Path | None:

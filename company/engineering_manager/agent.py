@@ -62,15 +62,19 @@ async def assign_to_engineers(args):
         )
         tasks = tasks[: config.MAX_ENGINEERS]
 
-    reports = await asyncio.gather(
-        *[run_engineer(f"engineer-{i + 1}", task) for i, task in enumerate(tasks)]
+    # return_exceptions=True so one engineer's failure doesn't abort the round;
+    # the EM sees the failure as text and can reassign.
+    results = await asyncio.gather(
+        *[run_engineer(f"engineer-{i + 1}", task) for i, task in enumerate(tasks)],
+        return_exceptions=True,
     )
 
-    body = "\n\n---\n\n".join(
-        f"### Task {i + 1}: {task}\n{report}"
-        for i, (task, report) in enumerate(zip(tasks, reports))
-    )
-    return {"content": [{"type": "text", "text": body + overflow}]}
+    sections = []
+    for i, (task, result) in enumerate(zip(tasks, results)):
+        if isinstance(result, Exception):
+            result = f"[engineer-{i + 1}] FAILED: {result}"
+        sections.append(f"### Task {i + 1}: {task}\n{result}")
+    return {"content": [{"type": "text", "text": "\n\n---\n\n".join(sections) + overflow}]}
 
 
 @tool(

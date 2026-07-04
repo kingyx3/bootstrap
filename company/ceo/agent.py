@@ -39,7 +39,13 @@ from engineering_manager.agent import run_engineering_manager
     },
 )
 async def delegate_to_engineering(args):
-    report = await run_engineering_manager(args["brief"])
+    try:
+        report = await run_engineering_manager(args["brief"])
+    except Exception as e:  # keep the CEO loop alive; surface the failure as data
+        return {
+            "content": [{"type": "text", "text": f"Engineering delegation failed: {e}"}],
+            "is_error": True,
+        }
     return {"content": [{"type": "text", "text": report}]}
 
 

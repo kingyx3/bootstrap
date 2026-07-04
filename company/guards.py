@@ -4,11 +4,9 @@ A prompt that says "never run destructive commands" is a request. A hook that
 denies the tool call is a rule. Engineers run Bash (including git), so we gate it.
 """
 
-# Substrings that should never appear in a Bash command engineers run.
+# Destructive patterns matched as substrings. These have no safe subdirectory
+# form, so a substring match won't create false positives (unlike a bare `rm`).
 _DANGEROUS = (
-    "rm -rf /",
-    "rm -rf ~",
-    "rm -rf .",
     "git push --force",
     "git push -f",
     "mkfs",
@@ -18,8 +16,25 @@ _DANGEROUS = (
     "chmod -r 777 /",
 )
 
+# A recursive rm is catastrophic only when aimed at one of these whole tokens.
+# Token matching means `rm -rf ./build` is allowed while `rm -rf .` is blocked.
+_RM_DANGER_TARGETS = {"/", "/*", "~", "~/", ".", "./", "*"}
+
 # Push targets that engineers must never write to directly — they use branches + PRs.
 _PROTECTED_BRANCHES = ("main", "master")
+
+
+def _is_catastrophic_rm(tokens: list[str]) -> bool:
+    if "rm" not in tokens:
+        return False
+    recursive = (
+        any(t.startswith("-") and not t.startswith("--") and "r" in t and "f" in t for t in tokens)
+        or ("-r" in tokens and "-f" in tokens)
+        or ("--recursive" in tokens and "--force" in tokens)
+    )
+    if not recursive:
+        return False
+    return any(t in _RM_DANGER_TARGETS for t in tokens)
 
 
 def _pushes_to_protected_branch(command: str) -> bool:
@@ -51,8 +66,9 @@ async def block_dangerous_bash(input_data, tool_use_id, context):
     """
     command = input_data.get("tool_input", {}).get("command", "")
     lowered = command.lower()
+    tokens = lowered.split()
 
-    if any(bad in lowered for bad in _DANGEROUS):
+    if any(bad in lowered for bad in _DANGEROUS) or _is_catastrophic_rm(tokens):
         return _deny(command, f"Blocked by company policy — destructive command: {command!r}")
 
     if _pushes_to_protected_branch(lowered):

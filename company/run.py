@@ -19,7 +19,12 @@ async def main() -> None:
         raise SystemExit(2)
 
     if repo_configured():
-        dest = await asyncio.to_thread(ensure_base_clone)
+        try:
+            dest = await asyncio.to_thread(ensure_base_clone)
+        except Exception as e:
+            print(f"[bootstrap] ERROR preparing project repo: {e}")
+            print("Check PROJECT_REPO and GITHUB_TOKEN, and that git is installed.")
+            raise SystemExit(1)
         print(f"[bootstrap] project repo ready at {dest}\n")
 
     directive = " ".join(sys.argv[1:])

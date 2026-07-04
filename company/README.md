@@ -130,6 +130,34 @@ You should see the CEO report success and a new file under `workspace/hello/`.
   environment (that's how `git`/`gh` authenticate). Scope the PAT to just this
   repo, as you would a CI token, and prefer a fine-grained PAT.
 
+## Testing
+
+Pure logic (the guard's boundaries and repo parsing) is covered by a test suite
+that needs no API key, network, or git:
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+## Known considerations before production
+
+- **Validate the delegation on first run.** The 3-level hierarchy works by
+  running each level as a nested `query()` inside the level above (via the
+  delegation tools). Confirm it end-to-end with the smoke test above before
+  relying on it; it needs `ANTHROPIC_API_KEY` (and, in repo mode, `git`/`gh`).
+- **"Merge = staging" is policy, not detection.** The org treats merging the
+  default branch as a staging deploy and has no production tooling; it does not
+  inspect your CI. If your default branch deploys straight to production, don't
+  give the EM `merge_pull_request` — have it only open PRs and approve merges
+  yourself. Requiring green checks via branch protection is a good backstop.
+- **Worktree reuse across rounds.** Re-assigning the same engineer id in a later
+  round continues on that engineer's existing branch (good for revisions, not for
+  unrelated work). Vary the work per round accordingly.
+- **Token exposure & least privilege.** `GITHUB_TOKEN` is visible to engineers'
+  Bash (that's how git/gh authenticate). Scope it to just this repo, prefer a
+  fine-grained PAT, and rotate it like a CI credential.
+
 ## Extending the org
 
 Add a new employee (e.g. a **QA** or **Designer**) the same way the engineer is
