@@ -4,14 +4,6 @@ This document takes the original rough prompt and turns it into a reusable, high
 
 ---
 
-## Before → After
-
-### Original prompt
-
-> how can i create and use a one man company effectively using AI today
-
-**Why it underperforms:** it's a single vague question. It doesn't say who you are, what constraints you have, what kind of answer you want, or how deep to go. The model has to guess at all of it, so you get a generic listicle of AI tools.
-
 ### Improved prompt
 
 Copy everything in the block below. Fill in the `[bracketed]` slots before sending.
