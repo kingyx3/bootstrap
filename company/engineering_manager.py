@@ -17,6 +17,7 @@ from claude_agent_sdk import (
 import config
 from prompts import ENGINEERING_MANAGER_PROMPT
 from engineer import run_engineer
+import repo as repo_mod
 
 
 @tool(
@@ -76,13 +77,17 @@ _eng_server = create_sdk_mcp_server(
 
 async def run_engineering_manager(brief: str) -> str:
     """Run the Engineering Manager on one project brief; return its report to the CEO."""
+    # Plan against the project repo when one is configured, else the workspace.
+    planning_dir = (
+        repo_mod.base_repo_dir() if repo_mod.repo_configured() else config.COMPANY_ROOT
+    )
     options = ClaudeAgentOptions(
         system_prompt=ENGINEERING_MANAGER_PROMPT,
         model=config.MANAGER_MODEL,
         mcp_servers={"eng": _eng_server},
         allowed_tools=["Read", "Glob", "Grep", "mcp__eng__assign_to_engineers"],
         permission_mode="acceptEdits",
-        cwd=str(config.COMPANY_ROOT),
+        cwd=str(planning_dir),
         setting_sources=["project"],
     )
 

@@ -29,10 +29,33 @@ engineers as the Engineering Manager assigns tasks for (capped by `MAX_ENGINEERS
 | `engineering_manager.py` | Engineering Manager + `assign_to_engineers` tool (the parallel fan-out) |
 | `engineer.py` | A single engineer agent (`run_engineer`), scaled to many |
 | `prompts.py` | The three system prompts (job descriptions) |
-| `guards.py` | `PreToolUse` hook that blocks destructive shell commands |
-| `config.py` | Models per role, `MAX_ENGINEERS`, paths |
+| `guards.py` | `PreToolUse` hook: blocks destructive commands and pushes to the default branch |
+| `repo.py` | Project-repo integration: clone, per-engineer git worktrees, GitHub MCP |
+| `config.py` | Models per role, `MAX_ENGINEERS`, `PROJECT_REPO`, paths |
 | `CLAUDE.md` | Company memory, auto-loaded for every role |
-| `workspace/` | Where engineers build product code |
+| `workspace/` | The cloned project repo + per-engineer worktrees (or greenfield code) |
+
+## Name your GitHub repo at inception
+
+Set `PROJECT_REPO` when you first use this template — this is what makes the
+GitHub repo part of the engineers' toolset:
+
+```bash
+export PROJECT_REPO=your-org/your-product     # owner/name, or a full URL
+export GITHUB_TOKEN=ghp_...                    # access to that repo
+# optional, needs Docker: export ENABLE_GITHUB_MCP=1
+```
+
+On first run the repo is cloned into `workspace/<repo>`. Each engineer then gets
+its **own git worktree + branch** of that clone (so parallel engineers never
+collide), builds there, commits, pushes its branch, and opens a pull request via
+`gh` (or the GitHub MCP tools if enabled). Auth uses a git credential helper that
+reads `$GITHUB_TOKEN` at run time — the token is never written into `.git/config`.
+
+Leave `PROJECT_REPO` empty to fall back to greenfield builds in `workspace/`.
+
+**Prerequisites for repo mode:** `git` (required), `gh` (recommended, for PRs),
+Docker (only if `ENABLE_GITHUB_MCP=1`).
 
 ## Setup
 
@@ -77,12 +100,16 @@ You should see the CEO report success and a new file under `workspace/hello/`.
 ## Safety
 
 - Boundaries are enforced in **code**, not just prompts: `guards.py` denies
-  destructive Bash via a `PreToolUse` hook, and roles run with a scoped
-  `allowed_tools` list.
-- Employees are told (in `CLAUDE.md` and their prompts) to work only under
-  `workspace/` and never touch the org's own runtime files.
+  destructive Bash *and* direct pushes to the default branch via a `PreToolUse`
+  hook, and roles run with a scoped `allowed_tools` list. Engineers reach the
+  codebase only through pull requests.
+- Employees are told (in `CLAUDE.md` and their prompts) to work only in their
+  assigned directory and never touch the org's own runtime files.
 - The CEO escalates anything irreversible or outward-facing to you rather than
   acting. Add more hooks in `guards.py` as you grant more powerful tools.
+- **Token exposure:** `GITHUB_TOKEN` is available to the engineers' Bash
+  environment (that's how `git`/`gh` authenticate). Scope the PAT to just this
+  repo, as you would a CI token, and prefer a fine-grained PAT.
 
 ## Extending the org
 
